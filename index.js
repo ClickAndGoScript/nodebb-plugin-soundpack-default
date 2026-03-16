@@ -1,7 +1,6 @@
 'use strict';
 
 const user = require.main.require('./src/user');
-const plugins = require.main.require('./src/plugins');
 
 const plugin = module.exports;
 let app;
@@ -20,9 +19,11 @@ plugin.filterConfigGet = async (config) => {
 };
 
 plugin.filterUserSaveSettings = async (hookData) => {
-	hookData.settings.notificationSound = hookData.data.notificationSound;
-	hookData.settings.incomingChatSound = hookData.data.incomingChatSound;
-	hookData.settings.outgoingChatSound = hookData.data.outgoingChatSound;
+	if (hookData.data) {
+		hookData.settings.notificationSound = hookData.data.notificationSound;
+		hookData.settings.incomingChatSound = hookData.data.incomingChatSound;
+		hookData.settings.outgoingChatSound = hookData.data.outgoingChatSound;
+	}
 	return hookData;
 };
 
@@ -35,8 +36,8 @@ plugin.filterUserCustomSettings = async (hookData) => {
 		'Water drop (low)': 'waterdrop-low.mp3',
 	};
 
-	function addOptions(type, tplData) {
-		tplData[type] = Object.keys(soundsMap).map(function (name) {
+	function getOptions(type) {
+		return Object.keys(soundsMap).map(function (name) {
 			return {
 				name: name,
 				value: soundsMap[name],
@@ -45,10 +46,14 @@ plugin.filterUserCustomSettings = async (hookData) => {
 		});
 	}
 
-	const tplData = {};
-	addOptions('notificationSound', tplData);
-	addOptions('incomingChatSound', tplData);
-	addOptions('outgoingChatSound', tplData);
+	const tplData = {
+		notificationSound: getOptions('notificationSound'),
+		incomingChatSound: getOptions('incomingChatSound'),
+		outgoingChatSound: getOptions('outgoingChatSound'),
+		config: {
+			disableChat: hookData.disableChat || false
+		}
+	};
 
 	const settingsHtml = await app.renderAsync('partials/account/settings/sounds', tplData);
 
