@@ -1,6 +1,7 @@
 'use strict';
 
 const user = require.main.require('./src/user');
+const plugins = require.main.require('./src/plugins');
 
 const plugin = module.exports;
 let app;
@@ -12,9 +13,9 @@ plugin.init = async (hookData) => {
 
 plugin.filterConfigGet = async (config) => {
 	const userSettings = await user.getSettings(config.uid);
-	config.notificationSound = userSettings.notificationSound;
-	config.incomingChatSound = userSettings.incomingChatSound;
-	config.outgoingChatSound = userSettings.outgoingChatSound;
+	config.notificationSound = userSettings.notificationSound || '';
+	config.incomingChatSound = userSettings.incomingChatSound || '';
+	config.outgoingChatSound = userSettings.outgoingChatSound || '';
 	return config;
 };
 
@@ -43,6 +44,7 @@ plugin.filterUserCustomSettings = async (hookData) => {
 			};
 		});
 	}
+
 	const tplData = {};
 	addOptions('notificationSound', tplData);
 	addOptions('incomingChatSound', tplData);
@@ -54,6 +56,6 @@ plugin.filterUserCustomSettings = async (hookData) => {
 		title: '[[sounds:sounds]]',
 		content: settingsHtml,
 	});
+
 	return hookData;
 };
-

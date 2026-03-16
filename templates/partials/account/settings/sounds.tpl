@@ -6,7 +6,9 @@
         <option value="{notificationSound.value}" <!-- IF notificationSound.selected -->selected<!-- ENDIF notificationSound.selected -->>{notificationSound.name}</option>
         {{{end}}}
     </select>
-    <button type="button" class="form-control btn btn-sm btn-outline-secondary" data-action="play"><span class="hidden-xs">[[global:play]] </span><i class="fa fa-play"></i></button>
+    <button type="button" class="btn btn-outline-secondary" data-action="play">
+        <span class="d-none d-sm-inline">[[global:play]] </span><i class="fa fa-play"></i>
+    </button>
 </div>
 
 {{{ if !config.disableChat }}}
@@ -18,7 +20,9 @@
         <option value="{incomingChatSound.value}" <!-- IF incomingChatSound.selected -->selected<!-- ENDIF incomingChatSound.selected -->>{incomingChatSound.name}</option>
         {{{end}}}
     </select>
-    <button type="button" class="form-control btn btn-sm btn-outline-secondary" data-action="play"><span class="hidden-xs">[[global:play]] </span><i class="fa fa-play"></i></button>
+    <button type="button" class="btn btn-outline-secondary" data-action="play">
+        <span class="d-none d-sm-inline">[[global:play]] </span><i class="fa fa-play"></i>
+    </button>
 </div>
 
 <label class="form-label" for="chat-outgoing">[[sounds:outgoing-message-sound]]</label>
@@ -29,6 +33,8 @@
         <option value="{outgoingChatSound.value}" <!-- IF outgoingChatSound.selected -->selected<!-- ENDIF outgoingChatSound.selected -->>{outgoingChatSound.name}</option>
         {{{end}}}
     </select>
-    <button type="button" class="form-control btn btn-sm btn-outline-secondary" data-action="play"><span class="hidden-xs">[[global:play]] </span><i class="fa fa-play"></i></button>
+    <button type="button" class="btn btn-outline-secondary" data-action="play">
+        <span class="d-none d-sm-inline">[[global:play]] </span><i class="fa fa-play"></i>
+    </button>
 </div>
 {{{ end }}}

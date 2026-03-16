@@ -1,30 +1,22 @@
 {
   "name": "nodebb-plugin-soundpack-default",
-  "version": "3.0.1",
-  "description": "Default Sound Pack",
+  "version": "4.0.0",
+  "description": "חבילת צלילים ברירת מחדל עבור NodeBB",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "github.com/julianlam/nodebb-plugin-soundpack-default"
+    "url": "https://github.com/julianlam/nodebb-plugin-soundpack-default"
   },
   "keywords": [
     "nodebb",
     "sound",
     "sounds",
-    "soundpack"
+    "soundpack",
+    "hebrew"
   ],
   "author": "Julian Lam <julian@nodebb.org>",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/julianlam/nodebb-plugin-soundpack-default/issues"
-  },
-  "homepage": "https://github.com/julianlam/nodebb-plugin-soundpack-default",
   "nbbpm": {
-    "compatibility": "^3.0.0"
-  },
-  "devDependencies": {
-    "eslint": "7.22.0",
-    "eslint-config-airbnb-base": "14.2.1",
-    "eslint-plugin-import": "2.21.1"
+    "compatibility": "^3.0.0 || ^4.0.0"
   }
 }

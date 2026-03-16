@@ -1,48 +1,56 @@
 'use strict';
 
-/* globals app, window, document, $, socket, Audio, ajaxify, config */
-$(document).ready(function () {
-	var cache = {};
+/* globals config, app, socket, Audio */
 
-	socket.on('event:new_notification', function () {
-		playAudio(config.notificationSound);
-	});
+import { on } from 'hooks';
 
-	socket.on('event:chats.receive', function (data) {
-		if (parseInt(data.fromUid, 10) !== parseInt(app.user.uid, 10)) {
-			playAudio(config.incomingChatSound);
-		}
-	});
+// שמירת זיכרון לצלילים שכבר נטענו
+const cache = {};
 
-	$(window).on('action:chat.sent', function () {
-		playAudio(config.outgoingChatSound);
-	});
+function playAudio(file) {
+    if (!file) return;
 
-	$(window).on('action:ajaxify.end', function () {
-		if (ajaxify.data.template['account/settings']) {
-			$('.account').find('button[data-action="play"]').on('click', function () {
-				var soundName = $(this).parent().find('select')
-					.val();
-				playAudio(soundName);
-				return false;
-			});
-		}
-	});
+    const path = config.relative_path + '/assets/plugins/nodebb-plugin-soundpack-default/assets/sounds/' + file;
+    
+    if (!cache[file]) {
+        cache[file] = new Audio(path);
+    }
+    
+    const audio = cache[file];
+    audio.pause();
+    audio.currentTime = 0;
+    
+    audio.play().catch(e => console.error('[soundpack] Playback failed:', e));
+}
 
-	function playAudio(file) {
-		if (!file) {
-			return;
-		}
-		var audio = cache[file] || new Audio(
-			config.relative_path + '/assets/plugins/nodebb-plugin-soundpack-default/assets/sounds/' + file
-		);
-		cache[file] = audio;
-		audio.pause();
-		audio.currentTime = 0;
-		try {
-			audio.play();
-		} catch (err) {
-			console.error(err);
-		}
-	}
+// האזנה לאירועים
+on('static:init', () => {
+    socket.on('event:new_notification', () => {
+        playAudio(config.notificationSound);
+    });
+
+    socket.on('event:chats.receive', (data) => {
+        if (parseInt(data.fromUid, 10) !== parseInt(app.user.uid, 10)) {
+            playAudio(config.incomingChatSound);
+        }
+    });
+
+    on('action:chat.sent', () => {
+        playAudio(config.outgoingChatSound);
+    });
+
+    on('action:ajaxify.end', (data) => {
+        if (data.tpl_name === 'account/settings') {
+            const container = document.querySelector('.account');
+            if (container) {
+                container.querySelectorAll('button[data-action="play"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const select = btn.closest('.d-flex').querySelector('select');
+                        playAudio(select.value);
+                    });
+                });
+            }
+        }
+    });
 });
