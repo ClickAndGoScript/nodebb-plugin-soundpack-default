@@ -20,9 +20,9 @@ plugin.filterConfigGet = async (config) => {
 
 plugin.filterUserSaveSettings = async (hookData) => {
 	if (hookData.data) {
-		hookData.settings.notificationSound = hookData.data.notificationSound;
-		hookData.settings.incomingChatSound = hookData.data.incomingChatSound;
-		hookData.settings.outgoingChatSound = hookData.data.outgoingChatSound;
+		hookData.settings.notificationSound = hookData.data.notificationSound || '';
+		hookData.settings.incomingChatSound = hookData.data.incomingChatSound || '';
+		hookData.settings.outgoingChatSound = hookData.data.outgoingChatSound || '';
 	}
 	return hookData;
 };
@@ -41,7 +41,7 @@ plugin.filterUserCustomSettings = async (hookData) => {
 			return {
 				name: name,
 				value: soundsMap[name],
-				selected: userSettings[type] === soundsMap[name],
+				selected: String(userSettings[type]) === String(soundsMap[name]),
 			};
 		});
 	}
@@ -49,10 +49,7 @@ plugin.filterUserCustomSettings = async (hookData) => {
 	const tplData = {
 		notificationSound: getOptions('notificationSound'),
 		incomingChatSound: getOptions('incomingChatSound'),
-		outgoingChatSound: getOptions('outgoingChatSound'),
-		config: {
-			disableChat: hookData.disableChat || false
-		}
+		outgoingChatSound: getOptions('outgoingChatSound')
 	};
 
 	const settingsHtml = await app.renderAsync('partials/account/settings/sounds', tplData);

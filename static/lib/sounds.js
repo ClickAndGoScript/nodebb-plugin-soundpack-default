@@ -2,70 +2,61 @@
 
 /* globals config, app, socket, Audio */
 
-// שימוש ב-RequireJS של NodeBB כדי להבטיח טעינה תקינה
-require(['hooks', 'ajaxify'], function (hooks, ajaxify) {
-    const cache = {};
-
+(function () {
+    // פונקציית עזר להשמעת צליל
     function playAudio(file) {
         if (!file) return;
 
-        // נתיב מעודכן לנכסים בגרסה 4
-        const path = config.relative_path + '/assets/plugins/nodebb-plugin-soundpack-default/assets/sounds/' + file;
+        // נתיב מעודכן לפי ההגדרה החדשה ב-plugin.json
+        const soundUrl = config.relative_path + '/assets/plugins/nodebb-plugin-soundpack-default/sounds/' + file;
         
-        if (!cache[file]) {
-            cache[file] = new Audio(path);
-        }
+        const audio = new Audio(soundUrl);
         
-        const audio = cache[file];
-        audio.pause();
-        audio.currentTime = 0;
-        
-        // בדפדפנים מודרניים play מחזיר Promise
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(function(e) {
-                console.warn('[soundpack] השמעת צליל נחסמה על ידי הדפדפן או שהקובץ חסר:', e);
-            });
-        }
+        audio.play().catch(function (err) {
+            // דפדפנים חוסמים אודיו אם המשתמש לא לחץ על כלום בדף עדיין
+            console.warn('[soundpack] Playback blocked or file missing:', err);
+        });
     }
 
-    // צליל התראה חדשה
-    socket.on('event:new_notification', function () {
-        if (config.notificationSound) {
-            playAudio(config.notificationSound);
-        }
-    });
-
-    // צליל הודעת צ'אט נכנסת
-    socket.on('event:chats.receive', function (data) {
-        if (parseInt(data.fromUid, 10) !== parseInt(app.user.uid, 10)) {
-            if (config.incomingChatSound) {
-                playAudio(config.incomingChatSound);
+    // המתנה לטעינת המערכת
+    $(window).on('action:app.load', function () {
+        
+        // צליל התראה
+        socket.on('event:new_notification', function () {
+            if (config.notificationSound) {
+                playAudio(config.notificationSound);
             }
-        }
-    });
+        });
 
-    // צליל הודעת צ'אט ששלחתי
-    hooks.on('action:chat.sent', function () {
-        if (config.outgoingChatSound) {
-            playAudio(config.outgoingChatSound);
-        }
-    });
+        // צליל הודעה נכנסת
+        socket.on('event:chats.receive', function (data) {
+            if (app.user && parseInt(data.fromUid, 10) !== parseInt(app.user.uid, 10)) {
+                if (config.incomingChatSound) {
+                    playAudio(config.incomingChatSound);
+                }
+            }
+        });
 
-    // כפתורי "נגן" בדף ההגדרות
-    hooks.on('action:ajaxify.end', function (data) {
-        if (data.tpl_name === 'account/settings') {
-            const container = document.querySelector('.account');
-            if (container) {
-                container.addEventListener('click', function (e) {
-                    const btn = e.target.closest('button[data-action="play"]');
-                    if (btn) {
-                        e.preventDefault();
-                        const select = btn.closest('.d-flex').querySelector('select');
-                        playAudio(select.value);
+        // צליל הודעה יוצאת
+        $(window).on('action:chat.sent', function () {
+            if (config.outgoingChatSound) {
+                playAudio(config.outgoingChatSound);
+            }
+        });
+
+        // טיפול בכפתורי בדיקה (Play) בדף ההגדרות
+        $(window).on('action:ajaxify.end', function (ev, data) {
+            if (data.tpl_name === 'account/settings') {
+                $('.account').on('click', 'button[data-action="play"]', function (e) {
+                    e.preventDefault();
+                    const soundFile = $(this).closest('.d-flex').find('select').val();
+                    if (soundFile) {
+                        playAudio(soundFile);
+                    } else {
+                        app.alertError('אנא בחר צליל לבדיקה');
                     }
                 });
             }
-        }
+        });
     });
-});
+}());
