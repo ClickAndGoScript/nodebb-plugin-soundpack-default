@@ -61,16 +61,23 @@ require(['hooks', 'alerts'], function (hooks, alerts) {
                 if (config.incomingChatSound) {
                     playAudio(config.incomingChatSound);
                 }
-                // הצגת טוסט עבור צ'אט
-                alerts.alert({
-                    type: 'success',
-                    title: 'הודעה מ- ' + (data.fromUser ? data.fromUser.username : 'משתמש'),
-                    message: data.content,
-                    timeout: 5000,
-                    clickfn: function() {
-                        ajaxify.go('/roomId/' + data.roomId);
-                    }
-                });
+                
+                // מניעת הצגת התראה קופצת אם המשתמש כבר נמצא בצ'אט הפעיל
+                const isCurrentRoom = ajaxify.data && ajaxify.data.roomId && String(ajaxify.data.roomId) === String(data.roomId);
+                if (!isCurrentRoom) {
+                    const message = data.message || {};
+                    const fromUser = message.fromUser || {};
+                    // הצגת טוסט עבור צ'אט
+                    alerts.alert({
+                        type: 'success',
+                        title: 'הודעה מ- ' + (fromUser.username || 'משתמש'),
+                        message: message.content || '',
+                        timeout: 5000,
+                        clickfn: function() {
+                            ajaxify.go('/chats/' + data.roomId);
+                        }
+                    });
+                }
             }
         });
 
