@@ -1,8 +1,7 @@
 'use strict';
 
-/* globals app, window, document, $, socket, Audio, ajaxify, config */
 $(document).ready(function () {
-	var cache = {};
+	const cache = {};
 
 	socket.on('event:new_notification', function () {
 		playAudio(config.notificationSound);
@@ -21,7 +20,7 @@ $(document).ready(function () {
 	$(window).on('action:ajaxify.end', function () {
 		if (ajaxify.data.template['account/settings']) {
 			$('.account').find('button[data-action="play"]').on('click', function () {
-				var soundName = $(this).parent().find('select')
+				const soundName = $(this).parent().find('select')
 					.val();
 				playAudio(soundName);
 				return false;
@@ -33,7 +32,7 @@ $(document).ready(function () {
 		if (!file) {
 			return;
 		}
-		var audio = cache[file] || new Audio(
+		const audio = cache[file] || new Audio(
 			config.relative_path + '/assets/plugins/nodebb-plugin-soundpack-default/assets/sounds/' + file
 		);
 		cache[file] = audio;

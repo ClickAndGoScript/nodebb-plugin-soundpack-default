@@ -7,6 +7,9 @@
     "type": "git",
     "url": "github.com/julianlam/nodebb-plugin-soundpack-default"
   },
+  "scripts": {
+    "lint": "eslint ."
+  },
   "keywords": [
     "nodebb",
     "sound",
@@ -20,11 +23,10 @@
   },
   "homepage": "https://github.com/julianlam/nodebb-plugin-soundpack-default",
   "nbbpm": {
-    "compatibility": "^3.0.0"
+    "compatibility": "^4.14.0"
   },
   "devDependencies": {
-    "eslint": "7.22.0",
-    "eslint-config-airbnb-base": "14.2.1",
-    "eslint-plugin-import": "2.21.1"
+    "eslint": "10.7.0",
+    "eslint-config-nodebb": "^2.0.3"
   }
 }

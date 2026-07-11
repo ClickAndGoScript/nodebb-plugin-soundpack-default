@@ -1,6 +1,6 @@
 'use strict';
 
-const user = require.main.require('./src/user');
+const user = nodebb.require('./src/user');
 
 const plugin = module.exports;
 let app;
