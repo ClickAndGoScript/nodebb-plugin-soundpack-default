@@ -12,16 +12,18 @@ plugin.init = async (hookData) => {
 
 plugin.filterConfigGet = async (config) => {
 	const userSettings = await user.getSettings(config.uid);
-	config.notificationSound = userSettings.notificationSound;
-	config.incomingChatSound = userSettings.incomingChatSound;
-	config.outgoingChatSound = userSettings.outgoingChatSound;
+	config.notificationSound = userSettings.notificationSound || '';
+	config.incomingChatSound = userSettings.incomingChatSound || '';
+	config.outgoingChatSound = userSettings.outgoingChatSound || '';
 	return config;
 };
 
 plugin.filterUserSaveSettings = async (hookData) => {
-	hookData.settings.notificationSound = hookData.data.notificationSound;
-	hookData.settings.incomingChatSound = hookData.data.incomingChatSound;
-	hookData.settings.outgoingChatSound = hookData.data.outgoingChatSound;
+	if (hookData.data) {
+		hookData.settings.notificationSound = hookData.data.notificationSound || '';
+		hookData.settings.incomingChatSound = hookData.data.incomingChatSound || '';
+		hookData.settings.outgoingChatSound = hookData.data.outgoingChatSound || '';
+	}
 	return hookData;
 };
 
@@ -34,19 +36,21 @@ plugin.filterUserCustomSettings = async (hookData) => {
 		'Water drop (low)': 'waterdrop-low.mp3',
 	};
 
-	function addOptions(type, tplData) {
-		tplData[type] = Object.keys(soundsMap).map(function (name) {
+	function getOptions(type) {
+		return Object.keys(soundsMap).map(function (name) {
 			return {
 				name: name,
 				value: soundsMap[name],
-				selected: userSettings[type] === soundsMap[name],
+				selected: String(userSettings[type]) === String(soundsMap[name]),
 			};
 		});
 	}
-	const tplData = {};
-	addOptions('notificationSound', tplData);
-	addOptions('incomingChatSound', tplData);
-	addOptions('outgoingChatSound', tplData);
+
+	const tplData = {
+		notificationSound: getOptions('notificationSound'),
+		incomingChatSound: getOptions('incomingChatSound'),
+		outgoingChatSound: getOptions('outgoingChatSound')
+	};
 
 	const settingsHtml = await app.renderAsync('partials/account/settings/sounds', tplData);
 
@@ -54,6 +58,6 @@ plugin.filterUserCustomSettings = async (hookData) => {
 		title: '[[sounds:sounds]]',
 		content: settingsHtml,
 	});
+
 	return hookData;
 };
-

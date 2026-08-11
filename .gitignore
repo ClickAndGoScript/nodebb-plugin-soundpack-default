@@ -12,3 +12,4 @@ Vagrantfile
 provision.sh
 *.komodoproject
 
+nodebb-plugin-soundpack-default.xml

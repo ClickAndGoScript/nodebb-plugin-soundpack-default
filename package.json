@@ -1,11 +1,11 @@
 {
   "name": "nodebb-plugin-soundpack-default",
   "version": "3.1.0",
-  "description": "Default Sound Pack",
+  "description": "חבילת צלילים ברירת מחדל עבור NodeBB",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "github.com/julianlam/nodebb-plugin-soundpack-default"
+    "url": "https://github.com/julianlam/nodebb-plugin-soundpack-default"
   },
   "scripts": {
     "lint": "eslint ."
@@ -14,7 +14,8 @@
     "nodebb",
     "sound",
     "sounds",
-    "soundpack"
+    "soundpack",
+    "hebrew"
   ],
   "author": "Julian Lam <julian@nodebb.org>",
   "license": "MIT",

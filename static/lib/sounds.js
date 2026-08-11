@@ -1,47 +1,69 @@
 'use strict';
 
-$(document).ready(function () {
-	const cache = {};
+/* globals config, app, socket, Audio, $, ajaxify */
 
-	socket.on('event:new_notification', function () {
-		playAudio(config.notificationSound);
-	});
-
-	socket.on('event:chats.receive', function (data) {
-		if (parseInt(data.fromUid, 10) !== parseInt(app.user.uid, 10)) {
-			playAudio(config.incomingChatSound);
-		}
-	});
-
-	$(window).on('action:chat.sent', function () {
-		playAudio(config.outgoingChatSound);
-	});
-
-	$(window).on('action:ajaxify.end', function () {
-		if (ajaxify.data.template['account/settings']) {
-			$('.account').find('button[data-action="play"]').on('click', function () {
-				const soundName = $(this).parent().find('select')
-					.val();
-				playAudio(soundName);
-				return false;
-			});
-		}
-	});
+require(['hooks', 'alerts'], function (hooks, alerts) {
 
 	function playAudio(file) {
-		if (!file) {
-			return;
+		if (!file) return;
+		const soundUrl = config.relative_path + '/assets/plugins/nodebb-plugin-soundpack-default/sounds/' + file;
+		const audio = new Audio(soundUrl);
+		audio.play().catch(function (err) {
+			console.warn('[soundpack] Playback blocked:', err);
+		});
+	}
+
+	$(document).on('click', 'button[data-action="play"]', function (e) {
+		e.preventDefault();
+		const select = $(this).closest('.d-flex').find('select');
+		const soundFile = select.val();
+		if (soundFile) {
+			playAudio(soundFile);
 		}
-		const audio = cache[file] || new Audio(
-			config.relative_path + '/assets/plugins/nodebb-plugin-soundpack-default/assets/sounds/' + file
-		);
-		cache[file] = audio;
-		audio.pause();
-		audio.currentTime = 0;
-		try {
-			audio.play();
-		} catch (err) {
-			console.error(err);
-		}
+	});
+
+	if (!window.soundpackInitialized) {
+		socket.on('event:new_notification', function (data) {
+			if (config.notificationSound) {
+				playAudio(config.notificationSound);
+			}
+			if (data) {
+				alerts.alert({
+					type: 'info',
+					title: '[[sounds:new-notification-title]]',
+					message: data.bodyShort || '',
+					timeout: 5000,
+					clickfn: function () {
+						if (data.path) ajaxify.go(data.path);
+					},
+				});
+			}
+		});
+
+		socket.on('event:chats.receive', function (data) {
+			if (app.user && parseInt(data.fromUid, 10) !== parseInt(app.user.uid, 10)) {
+				if (config.incomingChatSound) {
+					playAudio(config.incomingChatSound);
+				}
+				const username = (data.fromUser && data.fromUser.username) ? data.fromUser.username : '';
+				alerts.alert({
+					type: 'success',
+					title: '[[modules:chat.user-has-messaged-you, ' + username + ']]',
+					message: data.message ? data.message.content : '',
+					timeout: 5000,
+					clickfn: function () {
+						ajaxify.go('chats/' + data.roomId);
+					},
+				});
+			}
+		});
+
+		hooks.on('action:chat.sent', function () {
+			if (config.outgoingChatSound) {
+				playAudio(config.outgoingChatSound);
+			}
+		});
+
+		window.soundpackInitialized = true;
 	}
 });

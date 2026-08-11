@@ -1,7 +1,7 @@
 {
   "staticDirs": {
-		"assets": "./assets"
-	},
+    "sounds": "./assets/sounds"
+  },
   "scripts": [
     "static/lib/sounds.js"
   ],
