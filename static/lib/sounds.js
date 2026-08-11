@@ -45,16 +45,20 @@ require(['hooks', 'alerts'], function (hooks, alerts) {
 				if (config.incomingChatSound) {
 					playAudio(config.incomingChatSound);
 				}
-				const username = (data.fromUser && data.fromUser.username) ? data.fromUser.username : '';
-				alerts.alert({
-					type: 'success',
-					title: '[[modules:chat.user-has-messaged-you, ' + username + ']]',
-					message: data.message ? data.message.content : '',
-					timeout: 5000,
-					clickfn: function () {
-						ajaxify.go('chats/' + data.roomId);
-					},
-				});
+				const isCurrentRoom = ajaxify.data && ajaxify.data.roomId && String(ajaxify.data.roomId) === String(data.roomId);
+				if (!isCurrentRoom) {
+					const message = data.message || {};
+					const fromUser = message.fromUser || {};
+					alerts.alert({
+						type: 'success',
+						title: '[[modules:chat.user-has-messaged-you, ' + (fromUser.username || '') + ']]',
+						message: message.content || '',
+						timeout: 5000,
+						clickfn: function () {
+							ajaxify.go('chats/' + data.roomId);
+						},
+					});
+				}
 			}
 		});
 
