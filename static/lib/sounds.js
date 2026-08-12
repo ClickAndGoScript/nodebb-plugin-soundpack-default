@@ -1,6 +1,6 @@
 'use strict';
 
-/* globals config, app, socket, Audio, $, ajaxify */
+/* globals config, app, socket, Audio, $, ajaxify, DOMParser */
 
 require(['hooks', 'alerts'], function (hooks, alerts) {
 
@@ -27,7 +27,11 @@ require(['hooks', 'alerts'], function (hooks, alerts) {
 			if (config.notificationSound) {
 				playAudio(config.notificationSound);
 			}
-			if (data) {
+			// Chat messages already get their own toast from the
+			// event:chats.receive handler below — skip them here so a single
+			// incoming message doesn't show two toasts
+			const isChatNotification = data && (data.type === 'new-chat' || /^\/?chats\//.test(String(data.path || '')));
+			if (data && !isChatNotification) {
 				alerts.alert({
 					type: 'info',
 					title: '[[sounds:new-notification-title]]',
@@ -49,10 +53,20 @@ require(['hooks', 'alerts'], function (hooks, alerts) {
 				if (!isCurrentRoom) {
 					const message = data.message || {};
 					const fromUser = message.fromUser || {};
+					// message.content is parsed HTML; since NodeBB 4.13 the toast
+					// template escapes non-token strings, so raw HTML shows up as
+					// literal tags. Reduce it to plain text before displaying.
+					// DOMParser neither runs scripts nor loads resources.
+					let contentText;
+					try {
+						contentText = new DOMParser().parseFromString(message.content || '', 'text/html').body.textContent || '';
+					} catch (e) {
+						contentText = String(message.content || '').replace(/<[^>]*>/g, ' ');
+					}
 					alerts.alert({
 						type: 'success',
 						title: '[[modules:chat.user-has-messaged-you, ' + (fromUser.username || '') + ']]',
-						message: message.content || '',
+						message: contentText,
 						timeout: 5000,
 						clickfn: function () {
 							ajaxify.go('chats/' + data.roomId);
