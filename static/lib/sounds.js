@@ -1,8 +1,38 @@
 'use strict';
 
-/* globals config, app, socket, Audio, $, ajaxify */
+/* globals config, app, socket, Audio, $, ajaxify, utils */
 
 require(['hooks', 'alerts'], function (hooks, alerts) {
+
+	// NodeBB emits both `event:new_notification` and `event:chats.receive` for the
+	// same incoming chat message in some cases (multi-tab sessions, join/leave races
+	// around the socket room), and only one of them in others. Track which chat
+	// messages already produced a toast so we show exactly one, regardless of which
+	// event(s) actually arrive. The fingerprint includes the raw message content (not
+	// just room+sender) so two distinct messages sent close together never collide.
+	const recentChatToasts = {};
+	const CHAT_TOAST_DEDUPE_WINDOW = 4000;
+	const CHAT_NOTIFICATION_TYPES = ['new-chat', 'new-group-chat', 'new-public-chat'];
+
+	function chatToastFingerprint(roomId, fromUid, rawContent) {
+		return roomId + ':' + fromUid + ':' + (rawContent || '');
+	}
+
+	function claimChatToast(fingerprint) {
+		const now = Date.now();
+		Object.keys(recentChatToasts).forEach(function (k) {
+			if (now - recentChatToasts[k] > CHAT_TOAST_DEDUPE_WINDOW) {
+				delete recentChatToasts[k];
+			}
+		});
+		const last = recentChatToasts[fingerprint];
+		recentChatToasts[fingerprint] = now;
+		return !last;
+	}
+
+	function toPlainText(rawContent) {
+		return utils.stripHTMLTags(utils.decodeHTMLEntities(rawContent || ''));
+	}
 
 	function playAudio(file) {
 		if (!file) return;
@@ -28,15 +58,23 @@ require(['hooks', 'alerts'], function (hooks, alerts) {
 				playAudio(config.notificationSound);
 			}
 			if (data) {
-				alerts.alert({
-					type: 'info',
-					title: '[[sounds:new-notification-title]]',
-					message: data.bodyShort || '',
-					timeout: 5000,
-					clickfn: function () {
-						if (data.path) ajaxify.go(data.path);
-					},
-				});
+				const isChatNotification = CHAT_NOTIFICATION_TYPES.indexOf(data.type) !== -1;
+				const isCurrentRoom = isChatNotification && ajaxify.data && ajaxify.data.roomId &&
+					String(ajaxify.data.roomId) === String(data.roomId);
+				const canShow = !isChatNotification || (!isCurrentRoom && claimChatToast(
+					chatToastFingerprint(data.roomId, data.from, data.bodyLong)
+				));
+				if (canShow) {
+					alerts.alert({
+						type: 'info',
+						title: '[[sounds:new-notification-title]]',
+						message: data.bodyShort || '',
+						timeout: 5000,
+						clickfn: function () {
+							if (data.path) ajaxify.go(data.path);
+						},
+					});
+				}
 			}
 		});
 
@@ -46,13 +84,15 @@ require(['hooks', 'alerts'], function (hooks, alerts) {
 					playAudio(config.incomingChatSound);
 				}
 				const isCurrentRoom = ajaxify.data && ajaxify.data.roomId && String(ajaxify.data.roomId) === String(data.roomId);
-				if (!isCurrentRoom) {
-					const message = data.message || {};
+				const message = data.message || {};
+				if (!isCurrentRoom && claimChatToast(
+					chatToastFingerprint(data.roomId, data.fromUid, message.content)
+				)) {
 					const fromUser = message.fromUser || {};
 					alerts.alert({
 						type: 'success',
 						title: '[[modules:chat.user-has-messaged-you, ' + (fromUser.username || '') + ']]',
-						message: message.content || '',
+						message: toPlainText(message.content),
 						timeout: 5000,
 						clickfn: function () {
 							ajaxify.go('chats/' + data.roomId);
