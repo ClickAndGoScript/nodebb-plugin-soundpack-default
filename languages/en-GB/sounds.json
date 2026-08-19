@@ -3,5 +3,6 @@
     "notification-sound": "Notification Sound",
     "incoming-message-sound": "Incoming Message Sound",
     "outgoing-message-sound": "Outgoing Message Sound",
-    "no-sound": "No sound"
+    "no-sound": "No sound",
+    "new-notification-title": "Notifications"
 }
