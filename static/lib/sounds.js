@@ -53,10 +53,11 @@ require(['hooks', 'alerts'], function (hooks, alerts) {
 	});
 
 	if (!window.soundpackInitialized) {
-		socket.on('event:new_notification', function (data) {
+		socket.on('event:new_notification', function (payload) {
 			if (config.notificationSound) {
 				playAudio(config.notificationSound);
 			}
+			const data = payload && payload.notification;
 			if (data) {
 				const isChatNotification = CHAT_NOTIFICATION_TYPES.indexOf(data.type) !== -1;
 				const isCurrentRoom = isChatNotification && ajaxify.data && ajaxify.data.roomId &&
